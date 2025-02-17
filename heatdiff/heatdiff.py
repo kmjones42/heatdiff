@@ -1,4 +1,6 @@
+import argparse
 import os
+from contextlib import ExitStack
 from typing import List, BinaryIO
 
 from rich.segment import Segment
@@ -39,6 +41,10 @@ class HeatDiffApp(App):
 
 
 if __name__ == "__main__":
-    file_list = ["./test_files/file1", "./test_files/file2"]
-    with open(file_list[0], "rb") as f1, open(file_list[1], "rb") as f2:
-        HeatDiffApp([f1,f2]).run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("files", nargs="+")
+    args = parser.parse_args()
+
+    with ExitStack() as stack:
+        files = [stack.enter_context(open(fname, "rb")) for fname in args.files]
+        HeatDiffApp(files).run()
