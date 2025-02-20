@@ -1,15 +1,17 @@
 import argparse
+import functools
+import operator
 import os
 from contextlib import ExitStack
 from typing import List, BinaryIO
 
 from rich.segment import Segment
+from rich.style import Style
 
 from textual.app import App
 from textual.geometry import Size
 from textual.scroll_view import ScrollView
 from textual.strip import Strip
-
 
 class HeatDiffContent(ScrollView):
 
@@ -22,11 +24,19 @@ class HeatDiffContent(ScrollView):
     def render_line(self, y: int) -> Strip:
         scroll_x, scroll_y = self.scroll_offset
         y += scroll_y
-        segments = [Segment(f"0x{y:04x}")]
+        file_vals = []
         for file in self.files:
             file.seek(y)
+            file_vals.append(file.read(1).hex())
+        
+        segments = [Segment(f"0x{y:04x}")]
+        if functools.reduce(operator.eq, file_vals):
+            segments = [Segment(f"0x{y:04x}", Style(color="red"))]
+        
+        for val in file_vals:
             segments.append(Segment(" "))
-            segments.append(Segment(file.read(1).hex()))
+            segments.append(Segment(val))
+
         return Strip(segments)
 
 
